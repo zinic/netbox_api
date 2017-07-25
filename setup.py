@@ -13,7 +13,7 @@ extras_require = {
 
 setup(
     name='netbox_api',
-    version='0.4.1',
+    version='0.4.2',
     description="""Netbox API bindings and tools for Python
     Website: https://github.com/zinic/netbox_api
     """,

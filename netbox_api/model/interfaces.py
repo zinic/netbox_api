@@ -36,7 +36,6 @@ class FormFactorConstants(Enum):
     E1 = 4010
     T3 = 4040
     E3 = 4050
-    E3 = 4050
 
     # Stacking
     CISCO_STACK_WISE = 5000
