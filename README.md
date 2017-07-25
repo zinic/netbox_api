@@ -1,9 +1,8 @@
 ## netbox_api
-#### A Netbox Python CLI and API Client
+[Netbox](https://github.com/digitalocean/netbox) Python CLI and API Client
 
 ## API Compatibility
 * Netbox >= v2.0.10
-
 
 ## Installation
 
@@ -94,3 +93,7 @@ netbox_api devices list -t unused
 # Be verbose and output a device info table
 netbox_api devices list -v -t unused
 ```
+
+## License
+
+This software is made available to you under the [MIT License](LICENSE).
