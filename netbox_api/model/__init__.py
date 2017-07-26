@@ -1,9 +1,13 @@
 from .common import CustomFields
-from .sites import Site
-from .devices import Device
-from .interfaces import Interface, FormFactorConstants
+from .site import Site
+from .device import Device
+from .device_type import DeviceType
+from .device_role import DeviceRole
+from .interface import Interface, FormFactorConstants
 from .tenancy import Tenant, TenantGroup
-from .regions import Region
-from .racks import Rack, RackTypeConstant, RackWidthConstant
+from .region import Region
+from .rack import Rack, RackTypeConstant, RackWidthConstant
 from .rack_role import RackRole
 from .rack_group import RackGroup
+from .manufacturer import Manufacturer
+from .platform import Platform

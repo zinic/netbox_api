@@ -7,12 +7,21 @@ from netbox_api.model import *
 class WhenRequesting(unittest.TestCase):
     def setUp(self):
         self.netbox = new_api_client(
-            host='192.168.13.70',
+            host='localhost',
             port=8080,
             scheme='http',
-            token='1cc26306d45f980332484221d42e5beab7bc3aaa')
+            token='token')
 
     def tearDown(self):
+        try:
+            pass
+        except Exception:
+            pass
+
+        self.netbox.delete_device_type(self.device_type.id)
+        self.netbox.delete_platform(self.platform.id)
+        self.netbox.delete_manufacturer(self.manufacturer.id)
+        self.netbox.delete_device_role(self.device_role.id)
         self.netbox.delete_rack(self.rack.id)
         self.netbox.delete_rack_group(self.rack_group.id)
         self.netbox.delete_rack_role(self.rack_role.id)
@@ -83,6 +92,37 @@ class WhenRequesting(unittest.TestCase):
             descending_units=False,
             rack_type=RackTypeConstant.CABINET_4_POST)
         self.rack = self.netbox.rack(rack_id)
+
+        # Devices
+        device_role_id = self.netbox.create_device_role(
+            name='test_device_role',
+            slug='test_device_role',
+            color='fefefe')
+        self.device_role = self.netbox.device_role(device_role_id)
+
+        manufacturer_id = self.netbox.create_manufacturer(
+            name='test_manufacturer',
+            slug='test_manufacturer')
+        self.manufacturer = self.netbox.manufacturer(manufacturer_id)
+
+        platform_id = self.netbox.create_platform(
+            name='test_platform',
+            slug='test_platform')
+        self.platform = self.netbox.platform(platform_id)
+
+        device_type_id = self.netbox.create_device_type(
+            model='test_model',
+            slug='test_model',
+            u_height=1,
+            subdevice_role='None',
+            manufacturer_id=manufacturer_id,
+            part_number='12345abcde',
+            interface_ordering=1,
+            is_pdu=False,
+            is_console_server=False,
+            is_full_depth=True,
+            is_network_device=False)
+        self.device_type = self.netbox.device_type(device_type_id)
 
 
 if __name__ == '__main__':

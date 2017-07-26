@@ -668,31 +668,187 @@ class NetboxClient(object):
         # If there are results, return them
         return resp.wrap_results(Device)[0]
 
+    def platform(self, platform_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/platforms/{}', platform_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(Platform)[0]
+
+    def create_platform(self, name, slug, rpc_client=''):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/platforms'),
+            json={
+                'name': name,
+                'slug': slug,
+                'rpc_client': rpc_client
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_platform(self, platform_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/platforms/{}', platform_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def manufacturer(self, manufacturer_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/manufacturers/{}', manufacturer_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(Manufacturer)[0]
+
+    def create_manufacturer(self, name, slug):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/manufacturers'),
+            json={
+                'name': name,
+                'slug': slug,
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_manufacturer(self, manufacturer_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/manufacturers/{}', manufacturer_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def device_type(self, device_type_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/device-types/{}', device_type_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(DeviceType)[0]
+
+    def create_device_type(self, model, slug, u_height, manufacturer_id, part_number=None, interface_ordering=None,
+                           is_console_server=False, is_network_device=False, subdevice_role='', is_full_depth=False,
+                           is_pdu=False, comments='', custom_fields=None):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/device-types'),
+            json={
+                'model': model,
+                'slug': slug,
+                'u_height': u_height,
+                'is_pdu': is_pdu,
+                'is_full_depth': is_full_depth,
+                'subdevice_role': subdevice_role,
+                'is_console_server': is_console_server,
+                'is_network_device': is_network_device,
+                'part_number': part_number,
+                'interface_ordering': interface_ordering,
+                'manufacturer': manufacturer_id,
+                'comments': comments,
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_device_type(self, device_type_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/device-types/{}', device_type_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def device_role(self, device_role_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/device-roles/{}', device_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(DeviceRole)[0]
+
+    def create_device_role(self, name, slug, color='000000'):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/device-roles'),
+            json={
+                'name': name,
+                'slug': slug,
+                'color': color
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_device_role(self, device_role_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/device-roles/{}', device_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
     def create_device(self, name, device_role, manufacturer, model_name, status, site_id, custom_fields=None,
                       comments=None, face=None, asset_tag=None, platform=None, primary_ip4=None, primary_ip6=None,
                       position=0, serial=None, rack_id=None, tenant_id=None):
-        """
-        {
-          "status": "string",
-          "custom_fields": "string",
-          "device_role": "string",
-          "name": "string",
-          "site": "string",
-          "comments": "string",
-          "face": "string",
-          "asset_tag": "string",
-          "platform": "string",
-          "primary_ip4": "string",
-          "device_type": "string",
-          "primary_ip6": "string",
-          "position": 0,
-          "serial": "string",
-          "rack": "string",
-          "tenant": "string"
-        }
-        """
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/devices'),
+            json={
+                'status': 'string',
+                'device_role': 'string',
+                'name': 'string',
+                'site': 'string',
+                'comments': 'string',
+                'face': 'string',
+                'asset_tag': 'string',
+                'platform': 'string',
+                'primary_ip4': 'string',
+                'device_type': 'string',
+                'primary_ip6': 'string',
+                'position': 0,
+                'serial': 'string',
+                'rack': 'string',
+                'tenant': 'string',
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
 
-        pass
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
 
     def lookup_device(self, device_name):
         """
