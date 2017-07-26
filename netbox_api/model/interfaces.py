@@ -1,4 +1,3 @@
-# Form factor constants
 from enum import Enum
 
 

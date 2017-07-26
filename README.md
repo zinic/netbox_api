@@ -48,25 +48,36 @@ The netbox_api configuration is located at `~/.netbox_api` and is read as an INI
 
 ```ini
 [netbox]
+scheme = https
 host = netbox.example.com
-username = user_api_token
-ca_cert = /path/to_a_ca_cert/that_can_validate
+port = 443
+token = <valid-token>
+
+# Optional value for specifying a custom CA cert for SSL validation
+ca_cert = /usr/local/share/ca-certificates/custom-ca.crt
 ```
 
 ## Library Usage
 
-netbox_api is simple to initialize and begin using.
+Detailed documentation is still in progress. To see all available API calls in the client please view the [client functional tests](netbox_api/api/client_test.py).
 
 ```python
 import netbox_api
 
 # Creating the client requires a valid config. See the configuration section of the README for this.
-client = netbox_api.new_api_client()
+client = netbox_api.new_api_client(
+    host='localhost',
+    port='8000',
+    token='mytoken')
 
 # Lookup methods will always return a list since many devices may match a given name.
 devices = client.lookup_device('device-name')
 for device in devices:
     print(device.name)
+    
+# Objects can also be pulled from the API via their ID
+device = client.device(1)
+print(device.name)
 ```
 
 ## CLI Usage

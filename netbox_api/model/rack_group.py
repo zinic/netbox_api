@@ -1,7 +1,4 @@
-from netbox_api.model.common import CustomFields
-
-
-class TenantGroup(object):
+class RackGroupSite(object):
     def __init__(self, id=None, url=None, name=None, slug=None):
         self.id = id
         self.url = url
@@ -16,15 +13,12 @@ class TenantGroup(object):
         return cls(**contents)
 
 
-class Tenant(object):
-    def __init__(self, group=None, custom_fields=None, id=None, name=None, slug=None, description=None, comments=None):
-        self.group = TenantGroup.from_dict(group)
-        self.custom_fields = CustomFields.from_dict(custom_fields)
+class RackGroup(object):
+    def __init__(self, site=None, id=None, name=None, slug=None):
+        self.site = RackGroupSite.from_dict(site)
         self.id = id
         self.name = name
         self.slug = slug
-        self.description = description
-        self.comments = comments
 
     @classmethod
     def from_dict(cls, contents):

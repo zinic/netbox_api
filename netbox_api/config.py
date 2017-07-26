@@ -44,7 +44,7 @@ def load_config():
     cfg = PynetboxConfig(config_path())
 
     # Check that the config has what we need
-    if not cfg.has_section('netbox') or not cfg.has_options('netbox', 'host', 'token'):
+    if not cfg.has_section('netbox') or not cfg.has_options('netbox', 'port', 'host', 'token'):
         raise ConfigException('Configuration is missing fields. Please see the README for further instruction.')
 
     return cfg

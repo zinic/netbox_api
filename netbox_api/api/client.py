@@ -3,7 +3,9 @@ import json
 import requests
 import requests.auth
 
-from netbox_api.model import Device, Site, Tenant, Interface
+from netbox_api.model import *
+
+JSON_DECODE_ERR_FMT = 'Unable to decode result for request. Content body:\n{}'
 
 
 class NetboxTokenAuth(requests.auth.AuthBase):
@@ -40,19 +42,23 @@ class NetboxResponse(object):
         self._json = None
 
     def _parse_content(self):
-        payload = json.loads(self._content)
+        try:
+            payload = json.loads(self._content)
 
-        # Single entity requests don't have the result wrapper JSON so we
-        # choose to emulate it - DRY
-        if 'results' not in payload:
-            return {
-                'count': 1,
-                'next': None,
-                'previous': None,
-                'results': [payload]
-            }
+            # Single entity requests don't have the result wrapper JSON so we
+            # choose to emulate it - DRY
+            if 'results' not in payload:
+                return {
+                    'count': 1,
+                    'next': None,
+                    'previous': None,
+                    'results': [payload]
+                }
 
-        return payload
+            return payload
+
+        except json.decoder.JSONDecodeError as jde:
+            raise ClientException(JSON_DECODE_ERR_FMT.format(self._content)) from jde
 
     def raise_on_status(self):
         if self.ok is False:
@@ -106,8 +112,9 @@ def _overwrite_header(header_name, new_value, headers):
 
 
 class NetboxClient(object):
-    def __init__(self, host, token, scheme='https', verify=None):
+    def __init__(self, host, port, token, scheme, verify=None):
         self._host = host
+        self._port = port
         self._scheme = scheme
         self._auth = NetboxTokenAuth(token)
         self._verify_path = verify
@@ -168,9 +175,10 @@ class NetboxClient(object):
         # Format the path
         path = path_fmt.format(*parts)
 
-        return '{}://{}/api/{}/'.format(
+        return '{}://{}:{}/api/{}/'.format(
             self._scheme,
             self._host,
+            self._port,
             path)
 
     def interface(self, interface_id):
@@ -188,7 +196,7 @@ class NetboxClient(object):
         resp.raise_on_status()
 
         # If there are results, return them
-        return resp.wrap_results(Interface)
+        return resp.wrap_results(Interface)[0]
 
     def lookup_device_interface(self, device_name, interface_name):
         """
@@ -320,6 +328,40 @@ class NetboxClient(object):
         # Raise on bad status codes
         resp.raise_on_status()
 
+    def tenant_group(self, tenant_group_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/tenancy/tenant-groups/{}', tenant_group_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(TenantGroup)[0]
+
+    def create_tenant_group(self, name, slug):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/tenancy/tenant-groups'),
+            json={
+                'name': name,
+                'slug': slug
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_tenant_group(self, tenant_group_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/tenancy/tenant-groups/{}', tenant_group_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
     def tenant(self, tenant_id):
         """
         Get a tenant by the tenant's ID.
@@ -335,7 +377,34 @@ class NetboxClient(object):
         resp.raise_on_status()
 
         # If there are results, return them
-        return resp.wrap_results(Tenant)
+        return resp.wrap_results(Tenant)[0]
+
+    def create_tenant(self, name, slug, tenant_group_id, description=None, comments=None, custom_fields=None):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/tenancy/tenants'),
+            json={
+                'name': name,
+                'slug': slug,
+                'group': tenant_group_id,
+                'description': description,
+                'comments': comments,
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_tenant(self, tenant_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/tenancy/tenants/{}', tenant_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
 
     def lookup_tenant(self, tenant_name):
         """
@@ -355,6 +424,41 @@ class NetboxClient(object):
         # If there are results, return them
         return resp.wrap_results(Tenant)
 
+    def region(self, region_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/regions/{}', region_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(Region)[0]
+
+    def create_region(self, name, slug, parent_region_id=None):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/regions'),
+            json={
+                'name': name,
+                'slug': slug,
+                'parent': parent_region_id
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_region(self, region_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/regions/{}', region_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
     def site(self, site_id):
         """
         Get a site by the site's ID.
@@ -370,7 +474,43 @@ class NetboxClient(object):
         resp.raise_on_status()
 
         # If there are results, return them
-        return resp.wrap_results(Site)
+        return resp.wrap_results(Site)[0]
+
+    def create_site(self, name, slug, tenant_id, region_id, contact_email=None, physical_address=None,
+                    shipping_address=None, contact_name=None, contact_phone=None, asn=None, comments=None,
+                    facility=None, custom_fields=None):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/sites'),
+            json={
+                'name': name,
+                'slug': slug,
+                'facility': facility,
+                'tenant': tenant_id,
+                'region': region_id,
+                'contact_name': contact_name,
+                'contact_phone': contact_phone,
+                'contact_email': contact_email,
+                'physical_address': physical_address,
+                'shipping_address': shipping_address,
+                'comments': comments,
+                'asn': asn,
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_site(self, site_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/sites/{}', site_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
 
     def lookup_site(self, site_name):
         """
@@ -390,6 +530,127 @@ class NetboxClient(object):
         # If there are results, return them
         return resp.wrap_results(Site)
 
+    def rack_group(self, rack_group_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/rack-groups/{}', rack_group_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(RackGroup)[0]
+
+    def create_rack_group(self, name, slug, site_id):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/rack-groups'),
+            json={
+                'name': name,
+                'slug': slug,
+                'site': site_id
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_rack_group(self, rack_group_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/rack-groups/{}', rack_group_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def rack_role(self, rack_role_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/rack-roles/{}', rack_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(RackRole)[0]
+
+    def create_rack_role(self, name, slug, color='000000'):
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/rack-roles'),
+            json={
+                'name': name,
+                'slug': slug,
+                'color': color
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_rack_role(self, rack_role_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/rack-roles/{}', rack_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def rack(self, rack_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/dcim/racks/{}', rack_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(Rack)[0]
+
+    def create_rack(self, name, rack_group_id, site_id, tenant_id, u_height, width, descending_units, rack_type,
+                    rack_role_id=None, facility=None, comments='', custom_fields=None):
+        # Map constants to their values for the API
+        if isinstance(rack_type, RackTypeConstant):
+            rack_type = rack_type.value
+        if isinstance(width, RackWidthConstant):
+            width = width.value
+
+        resp = self._request(
+            method='post',
+            url=self._format_url('/dcim/racks'),
+            json={
+                'name': name,
+                'u_height': u_height,
+                'width': width,
+                'group': rack_group_id,
+                'site': site_id,
+                'facility_id': facility,
+                'role': rack_role_id,
+                'desc_units': descending_units,
+                'type': rack_type,
+                'tenant': tenant_id,
+                'comments': comments,
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def delete_rack(self, rack_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/racks/{}', rack_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
     def device(self, device_id):
         """
         Get a device by the device's ID.
@@ -405,7 +666,33 @@ class NetboxClient(object):
         resp.raise_on_status()
 
         # If there are results, return them
-        return resp.wrap_results(Device)
+        return resp.wrap_results(Device)[0]
+
+    def create_device(self, name, device_role, manufacturer, model_name, status, site_id, custom_fields=None,
+                      comments=None, face=None, asset_tag=None, platform=None, primary_ip4=None, primary_ip6=None,
+                      position=0, serial=None, rack_id=None, tenant_id=None):
+        """
+        {
+          "status": "string",
+          "custom_fields": "string",
+          "device_role": "string",
+          "name": "string",
+          "site": "string",
+          "comments": "string",
+          "face": "string",
+          "asset_tag": "string",
+          "platform": "string",
+          "primary_ip4": "string",
+          "device_type": "string",
+          "primary_ip6": "string",
+          "position": 0,
+          "serial": "string",
+          "rack": "string",
+          "tenant": "string"
+        }
+        """
+
+        pass
 
     def lookup_device(self, device_name):
         """
