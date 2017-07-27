@@ -17,7 +17,7 @@ Currently Supported Features
 import re
 
 from netbox_api.cmdutil import do_exec
-from netbox_api.model import Interface, FormFactorConstants
+from netbox_api.model import Interface, FormFactorConstant
 
 # Regex for pulling out the IP address from the output of the CLI tool 'ip'
 _IP_TOOL_RE = re.compile('inet\\s+([^\\s]+)')
@@ -27,8 +27,8 @@ _ETHTOOL_PORT_RE = re.compile('[^:]+:\\s+\\[([^\\]]+)\\]')
 
 # Dictionary of port types from what ethtool output to what netbox expects
 _PORT_TYPES = {
-    'tp': FormFactorConstants.BASE_T_1GE,
-    'fibre': FormFactorConstants.SFP_PLUS_10GE
+    'tp': FormFactorConstant.BASE_T_1GE,
+    'fibre': FormFactorConstant.SFP_PLUS_10GE
 }
 
 

@@ -18,6 +18,7 @@ class WhenRequesting(unittest.TestCase):
         except Exception:
             pass
 
+        self.netbox.delete_device(self.device.id)
         self.netbox.delete_device_type(self.device_type.id)
         self.netbox.delete_platform(self.platform.id)
         self.netbox.delete_manufacturer(self.manufacturer.id)
@@ -114,15 +115,35 @@ class WhenRequesting(unittest.TestCase):
             model='test_model',
             slug='test_model',
             u_height=1,
-            subdevice_role='None',
+            subdevice_role=SubdeviceTypeConstant.NONE,
             manufacturer_id=manufacturer_id,
             part_number='12345abcde',
-            interface_ordering=1,
+            interface_ordering=InterfaceOrderConstant.BY_RACK_POSITION,
             is_pdu=False,
             is_console_server=False,
             is_full_depth=True,
             is_network_device=False)
         self.device_type = self.netbox.device_type(device_type_id)
+
+        try:
+            device_id = self.netbox.create_device(
+                name='test_device',
+                device_role_id=self.device_role.id,
+                status=DeviceStatusConstant.ACTIVE,
+                site_id=self.site.id,
+                rack_face=RackFaceConstant.FRONT,
+                asset_tag='12345',
+                platform_id=self.platform.id,
+                # primary_ip4_id='192.168.1.1',
+                # primary_ip6_id='2001:db8:85a3::8a2e:370:7334',
+                position=1,
+                device_type_id=self.device_type.id,
+                serial='54321',
+                rack_id=self.rack.id,
+                tenant_id=self.tenant.id)
+            self.device = self.netbox.device(device_id)
+        except Exception as ex:
+            print(ex)
 
 
 if __name__ == '__main__':

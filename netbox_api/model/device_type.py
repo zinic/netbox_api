@@ -1,4 +1,17 @@
+from enum import Enum
+
 from netbox_api.model.common import CustomFields
+
+
+class InterfaceOrderConstant(Enum):
+    BY_RACK_POSITION = 1
+    BY_NAME_ALPHABETICALLY = 2
+
+
+class SubdeviceTypeConstant(Enum):
+    NONE = 'None'
+    PARENT = 'Parent'
+    CHILD = 'Child'
 
 
 class DeviceTypeManufacturer(object):

@@ -748,9 +748,16 @@ class NetboxClient(object):
         # If there are results, return them
         return resp.wrap_results(DeviceType)[0]
 
-    def create_device_type(self, model, slug, u_height, manufacturer_id, part_number=None, interface_ordering=None,
-                           is_console_server=False, is_network_device=False, subdevice_role='', is_full_depth=False,
+    def create_device_type(self, model, slug, u_height, manufacturer_id, part_number=None,
+                           interface_ordering=InterfaceOrderConstant.BY_RACK_POSITION, is_console_server=False,
+                           is_network_device=False, subdevice_role=SubdeviceTypeConstant.NONE, is_full_depth=False,
                            is_pdu=False, comments='', custom_fields=None):
+        # Map constants
+        if isinstance(subdevice_role, SubdeviceTypeConstant):
+            subdevice_role = subdevice_role.value
+        if isinstance(interface_ordering, InterfaceOrderConstant):
+            interface_ordering = interface_ordering.value
+
         resp = self._request(
             method='post',
             url=self._format_url('/dcim/device-types'),
@@ -819,28 +826,35 @@ class NetboxClient(object):
         # Raise on bad status codes
         resp.raise_on_status()
 
-    def create_device(self, name, device_role, manufacturer, model_name, status, site_id, custom_fields=None,
-                      comments=None, face=None, asset_tag=None, platform=None, primary_ip4=None, primary_ip6=None,
-                      position=0, serial=None, rack_id=None, tenant_id=None):
+    def create_device(self, name, device_role_id, site_id, status=DeviceStatusConstant.ACTIVE, custom_fields=None,
+                      comments='', rack_face=RackFaceConstant.FRONT, asset_tag=None, platform_id=None,
+                      primary_ip4_id=None, primary_ip6_id=None, position=0, device_type_id=None, serial=None,
+                      rack_id=None, tenant_id=None):
+        # Map constants
+        if isinstance(status, DeviceStatusConstant):
+            status = status.value
+        if isinstance(rack_face, RackFaceConstant):
+            rack_face = rack_face.value
+
         resp = self._request(
             method='post',
             url=self._format_url('/dcim/devices'),
             json={
-                'status': 'string',
-                'device_role': 'string',
-                'name': 'string',
-                'site': 'string',
-                'comments': 'string',
-                'face': 'string',
-                'asset_tag': 'string',
-                'platform': 'string',
-                'primary_ip4': 'string',
-                'device_type': 'string',
-                'primary_ip6': 'string',
-                'position': 0,
-                'serial': 'string',
-                'rack': 'string',
-                'tenant': 'string',
+                'status': status,
+                'device_role': device_role_id,
+                'name': name,
+                'site': site_id,
+                'comments': comments,
+                'face': rack_face,
+                'asset_tag': asset_tag,
+                'platform': platform_id,
+                'device_type': device_type_id,
+                'primary_ip4': primary_ip4_id,
+                'primary_ip6': primary_ip6_id,
+                'position': position,
+                'serial': serial,
+                'rack': rack_id,
+                'tenant': tenant_id,
                 'custom_fields': custom_fields if custom_fields is not None else dict()
             })
 
@@ -882,6 +896,14 @@ class NetboxClient(object):
             params=params)
 
         return [r for r in result_iter]
+
+    def delete_device(self, device_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/dcim/devices/{}', device_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
 
     def update_device_custom_fields(self, device_id, custom_fields):
         """

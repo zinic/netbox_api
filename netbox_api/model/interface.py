@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class FormFactorConstants(Enum):
+class FormFactorConstant(Enum):
     # Virtual interfaces
     VIRTUAL = 0
     LAG = 200

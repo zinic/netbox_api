@@ -1,4 +1,20 @@
+from enum import Enum
+
 from netbox_api.model.common import CustomFields
+
+
+class DeviceStatusConstant(Enum):
+    OFFLINE = 0
+    ACTIVE = 1
+    PLANNED = 2
+    STAGED = 3
+    FAILED = 4
+    INVENTORY = 5
+
+
+class RackFaceConstant(Enum):
+    FRONT = 0
+    REAR = 1
 
 
 class Manufacturer(object):
