@@ -11,3 +11,6 @@ from .rack_role import RackRole
 from .rack_group import RackGroup
 from .manufacturer import Manufacturer
 from .platform import Platform
+from .ipam_role import PrefixRole
+from .ipam_vrf import VRF
+from .ipam_ip import IPAddress, IPAddressRoleConstant, IPAddressStatusConstant

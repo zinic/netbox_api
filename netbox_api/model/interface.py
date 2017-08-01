@@ -47,33 +47,6 @@ class FormFactorConstant(Enum):
     OTHER = 32767
 
 
-class FormFactor(object):
-    def __init__(self, value=None, label=None):
-        self.value = value
-        self.label = label
-
-    @classmethod
-    def from_dict(cls, contents):
-        if contents is None:
-            return cls()
-
-        return cls(**contents)
-
-
-class Connection(object):
-    def __init__(self, id=None, url=None, connection_status=None):
-        self.id = id
-        self.url = url
-        self.connection_status = connection_status
-
-    @classmethod
-    def from_dict(cls, contents):
-        if contents is None:
-            return cls()
-
-        return cls(**contents)
-
-
 class InterfaceDevice(object):
     def __init__(self, id=None, url=None, name=None, display_name=None):
         self.id = id
@@ -90,30 +63,9 @@ class InterfaceDevice(object):
 
 
 class FormFactor(object):
-    def __init__(self, value=None, label=None):
-        self.value = value
+    def __init__(self, label=None, value=None):
         self.label = label
-
-    @classmethod
-    def from_dict(cls, contents):
-        if contents is None:
-            return cls()
-
-        return cls(**contents)
-
-
-class ConnectedInterface(object):
-    def __init__(self, device=None, form_factor=None, id=None, url=None, name=None, lag=None, mac_address=None,
-                 mgmt_only=None, description=None):
-        self.device = InterfaceDevice.from_dict(device)
-        self.form_factor = FormFactor.from_dict(form_factor)
-        self.id = id
-        self.url = url
-        self.name = name
-        self.lag = lag
-        self.mac_address = mac_address
-        self.mgmt_only = mgmt_only
-        self.description = description
+        self.value = value
 
     @classmethod
     def from_dict(cls, contents):
@@ -124,18 +76,22 @@ class ConnectedInterface(object):
 
 
 class Interface(object):
-    def __init__(self, device=None, form_factor=None, connection=None, connected_interface=None, id=None, name=None,
-                 lag=None, mac_address=None, mgmt_only=None, description=None):
+    def __init__(self, device=None, form_factor=None, id=None, name=None, enabled=None, lag=None, mtu=None,
+                 mac_address=None, mgmt_only=None, description=None, is_connected=None, interface_connection=None,
+                 circuit_termination=None):
         self.device = InterfaceDevice.from_dict(device)
         self.form_factor = FormFactor.from_dict(form_factor)
-        self.connection = Connection.from_dict(connection)
-        self.connected_interface = ConnectedInterface.from_dict(connected_interface)
         self.id = id
         self.name = name
+        self.enabled = enabled
         self.lag = lag
+        self.mtu = mtu
         self.mac_address = mac_address
         self.mgmt_only = mgmt_only
         self.description = description
+        self.is_connected = is_connected
+        self.interface_connection = interface_connection
+        self.circuit_termination = circuit_termination
 
     @classmethod
     def from_dict(cls, contents):

@@ -181,6 +181,141 @@ class NetboxClient(object):
             self._port,
             path)
 
+    def ipam_vrf(self, vrf_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/ipam/vrfs/{}', vrf_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(VRF)[0]
+
+    def ipam_create_vrf(self, name, route_distinguisher, tenant_id, enforce_unique=False, description=None,
+                        custom_fields=None):
+        """
+        :return:
+        """
+        resp = self._request(
+            method='post',
+            url=self._format_url('/ipam/vrfs'),
+            json={
+                'name': name,
+                'rd': route_distinguisher,
+                'tenant': tenant_id,
+                'enforce_unique': enforce_unique,
+                'description': description,
+                'custom_fields': custom_fields if custom_fields is not None else dict(),
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def ipam_delete_vrf(self, vrf_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/ipam/vrfs/{}', vrf_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def ipam_prefix_role(self, prefix_role_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/ipam/roles/{}', prefix_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(PrefixRole)[0]
+
+    def ipam_create_prefix_role(self, name, slug, weight=0):
+        """
+        :param name:
+        :param slug:
+        :param weight:
+        :return:
+        """
+        resp = self._request(
+            method='post',
+            url=self._format_url('/ipam/roles'),
+            json={
+                'name': name,
+                'slug': slug,
+                'weight': weight
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def ipam_delete_prefix_role(self, ipam_role_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/ipam/roles/{}', ipam_role_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+    def ipam_ip_address(self, ip_address_id):
+        resp = self._request(
+            method='get',
+            url=self._format_url('/ipam/ip-addresses/{}', ip_address_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # If there are results, return them
+        return resp.wrap_results(IPAddress)[0]
+
+    def ipam_create_ip_address(self, address, status, tenant_id, role=None, interface_id=None, vrf_id=None,
+                               nat_inside=None, description=None, custom_fields=None):
+        """
+
+        :return:
+        """
+        # Map constants
+        if isinstance(status, IPAddressStatusConstant):
+            status = status.value
+        if isinstance(role, IPAddressRoleConstant):
+            role = role.value
+
+        resp = self._request(
+            method='post',
+            url=self._format_url('/ipam/ip-addresses'),
+            json={
+                'description': description,
+                'tenant': tenant_id,
+                'interface': interface_id,
+                'vrf': vrf_id,
+                'role': role,
+                'status': status,
+                'address': address,
+                'nat_inside': nat_inside,
+                'custom_fields': custom_fields if custom_fields is not None else dict()
+            })
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
+        # Return the ID of the new interface
+        return resp.results[0]['id']
+
+    def ipam_delete_ip_address(self, ip_address_id):
+        resp = self._request(
+            method='delete',
+            url=self._format_url('/ipam/ip-addresses/{}', ip_address_id))
+
+        # Raise on bad status codes
+        resp.raise_on_status()
+
     def interface(self, interface_id):
         """
         Get a device interface by the interface's ID.
@@ -252,6 +387,10 @@ class NetboxClient(object):
         :param parent_lag:
         :return:
         """
+        # Map constants
+        if isinstance(form_factor, FormFactorConstant):
+            form_factor = form_factor.value
+
         resp = self._request(
             method='post',
             url=self._format_url('/dcim/interfaces'),
