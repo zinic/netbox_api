@@ -8,16 +8,18 @@ from netbox_api.util import parse_args
 
 
 def _lookup_device(client, device_name):
-    device_list = client.lookup_device(device_name)
-    if len(device_list) == 0:
+    matching_devices = client.dcim.list_devices(name=device_name)
+    if len(matching_devices) == 0:
         raise Exception('Unable to find a device by name: {}'.format(device_name))
 
-    return device_list[0]
+    return matching_devices[0]
 
 
 def update_device_tags(client, device_name, tags):
     device = _lookup_device(client, device_name)
-    client.update_device_custom_fields(device.id, {
+
+    # Tags are stored as a custom field
+    client.dcim.update_device(device.id, custom_fields={
         'Tags': ','.join([t.strip() for t in tags])
     })
 
@@ -29,25 +31,41 @@ def show_device(client, device_name):
     device = _lookup_device(client, device_name)
 
     print('Name: {}'.format(device.name))
-    print('Model: {}'.format(device.device_type.model))
-    print('')
-    print('Tags: {}'.format(device.custom_fields.tags))
+    print('Model: {}\n'.format(device.device_type.model))
+
+    print('Custom Fields:')
+    for k, v in device.custom_fields.items():
+        print('  {}: {}'.format(k, v))
+
+
+def _device_tags_match(device, tags):
+    for other_tag in tags:
+        if other_tag not in device.custom_fields['Tags']:
+            return False
+
+    return True
 
 
 def list_devices(client, tags, verbose, show_iface):
     if verbose:
         list_devices_table(client, tags, show_iface)
     else:
-        for device in client.list_devices(cf_Tags=tags[0]):
+        for device in client.dcim.list_devices(cf_Tags=tags[0]):
+            if _device_tags_match(device, tags) is False:
+                continue
+
             print(device.name)
 
 
 def list_devices_table(client, tags, show_iface):
     table = list()
 
-    for device in client.list_devices(cf_Tags=tags[0]):
+    for device in client.dcim.list_devices(cf_Tags=tags[0]):
+        if _device_tags_match(device, tags) is False:
+            continue
+
         mac_addr = ''
-        device_interfaces = client.lookup_device_interfaces(device.name)
+        device_interfaces = client.dcim.list_interfaces(device=device.name)
 
         if show_iface is not None:
             for interface in device_interfaces:
@@ -63,7 +81,7 @@ def list_devices_table(client, tags, show_iface):
             device.name,
             device.device_type.model,
             mac_addr,
-            device.custom_fields.tags])
+            device.custom_fields['Tags']])
 
     print(tabulate(table, headers=['Rack', 'Rack Position', 'Name', 'Device Model', 'MAC Addr', 'Tags']))
 

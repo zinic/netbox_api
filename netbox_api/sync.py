@@ -109,11 +109,11 @@ def synchronize_host(netbox_client):
     simple_hostname = hostname if '.' not in hostname else hostname.split('.')[0]
 
     # Look up the device definition
-    tenant = netbox_client.lookup_tenant('Infrastructure')[0]
-    device = netbox_client.lookup_device(simple_hostname)[0]
+    tenant = netbox_client.tenancy.list_tenants(name='Infrastructure')[0]
+    device = netbox_client.dcim.list_devices(name=simple_hostname)[0]
 
     # Clear old interfaces if we can
-    for interface in netbox_client.lookup_device_interfaces(simple_hostname):
+    for interface in netbox_client.dcim.list_interfaces(device=simple_hostname):
         netbox_client.delete_interface(interface.id)
 
     # Iterate through the real HW devices
@@ -132,8 +132,8 @@ def synchronize_host(netbox_client):
             raise Exception('Unable to determine port type for interface: {}'.format(iface_name))
 
         # Add this interface definition to the device
-        iface_id = netbox_client.create_interface(iface_name, form_factor, device.id, mac_addr)
+        iface_id = netbox_client.dcim.create_interface(iface_name, form_factor, device.id, mac_addr)
 
         # If there's an IP address, assign it to the device as well
         if ip_addr is not None:
-            netbox_client.assign_ip(ip_addr, iface_id, tenant.id)
+            netbox_client.ipam.assign_ip(ip_addr, iface_id, tenant.id)
